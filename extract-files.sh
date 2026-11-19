@@ -94,5 +94,15 @@ for MODULE_FOLDER in "${MODULE_FOLDERS[@]}"; do
         -exec basename {} \;
 done
 
+# Ensure RTC loads in first-stage init before auto_reboot timer creation
+if [ ! -f "${MY_DIR}/vendor_ramdisk/rtc-pm8xxx.ko" ] && [ -f "${MY_DIR}/vendor_dlkm/rtc-pm8xxx.ko" ]; then
+    cp -f "${MY_DIR}/vendor_dlkm/rtc-pm8xxx.ko" "${MY_DIR}/vendor_ramdisk/rtc-pm8xxx.ko"
+    echo "  - vendor_ramdisk/rtc-pm8xxx.ko (copied from vendor_dlkm)"
+fi
+if [ -f "${MY_DIR}/vendor_ramdisk/modules.load" ] && ! grep -qx 'rtc-pm8xxx.ko' "${MY_DIR}/vendor_ramdisk/modules.load"; then
+    echo 'rtc-pm8xxx.ko' >> "${MY_DIR}/vendor_ramdisk/modules.load"
+    echo "  - vendor_ramdisk/modules.load (+rtc-pm8xxx.ko)"
+fi
+
 # Clear temp dir
 rm -rf "${TMP_DIR}"
